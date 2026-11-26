@@ -9,7 +9,8 @@ interface
 uses
   Sanpai_Drawing;
 
-// Pose は賽銭箱の上面奥辺の中央。左右対称の正面から描く。
+// Pose は格子の奥辺の中央。投げ入れる硬貨と紙幣もこの原点を使う。
+// Rear の場合は背板を描き、透明背景へ接地影を出さない。
 procedure DrawOfferingBox(C: TSanpaiCanvas; const Pose: TPose; Rear: Boolean; Color: Cardinal);
 
 implementation

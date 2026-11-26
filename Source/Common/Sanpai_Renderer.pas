@@ -32,6 +32,7 @@ type
     procedure ReadPixels(Transparent: Boolean);
   public
     destructor Destroy; override;
+    // Time はオブジェクト内の秒数。無効な画像寸法では nil を返す。
     // 返す RGBA の所有権は描画器にある。次の Render 呼出しまで使用できる。
     // 同じ描画器の呼出しはホスト側で直列化する。
     function Render(Width,Height: Integer; const Settings: TSanpaiSettings; Time: Double): PPIXEL_RGBA;
@@ -101,6 +102,7 @@ begin
   SetLength(FPixels,Width*Height);
 end;
 
+// 同じ構図・木の色・土台の色で再利用できるよう、背景を独立した面へ描く。
 procedure TSanpaiRenderer.BuildBackground(View: TShrineView; const Palette: TSanpaiPalette);
 var
   Target: ID2D1BitmapRenderTarget;

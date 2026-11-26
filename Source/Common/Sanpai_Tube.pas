@@ -9,7 +9,8 @@ interface
 uses
   Sanpai_Drawing;
 
-// Pose の原点は筒の中心。Strength は 0～100、Progress は演出位置。
+// Pose の原点は筒の中心。Strength は 0～100。Color は木部の RGB。
+// Progress が 1 になると棒が出た姿勢を保持する。
 procedure DrawFortuneTube(C: TSanpaiCanvas; const Pose: TPose; Progress,Strength: Double; Color: Cardinal);
 
 implementation

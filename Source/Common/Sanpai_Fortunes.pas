@@ -14,7 +14,9 @@ type
     Paper, Text: Cardinal;
   end;
 
-// Paper と Text は RGB。紙の繊維と濃淡、見出しと運勢の色差を保つ。
+// Pose は紙の中心。Index は運勢の選択番号。
+// Reveal は紙の形、Effect は登場時の動きと透過を制御する。
+// BottomY は対象のローカル座標での画面下端。色は RGB。
 procedure DrawFortune(C: TSanpaiCanvas; const Pose: TPose; Index: Integer;
   const Colors: TFortuneColors; Reveal: TFortuneReveal; Effect: TFortuneEffect;
   Progress: Double; BottomY: Single);

@@ -91,6 +91,7 @@ begin
   Result := (Cardinal(Item.R) shl 16) or (Cardinal(Item.G) shl 8) or Item.B;
 end;
 
+// ホストが渡す現在値を、このコールバック内だけで使う設定へ読み込む。
 function SnapshotSettings: TSanpaiSettings;
 var
   Scene, Reveal, Effect: Integer;
@@ -258,6 +259,7 @@ begin
   end;
 end;
 
+// グループ名と配下の項目名には同じ範囲条件を登録する。
 procedure HideOutside(const Names: array of PWideChar; First,Last: TSanpaiScene);
 begin
   if First=Last then HideWhen(Names,HideNotEqual,First)

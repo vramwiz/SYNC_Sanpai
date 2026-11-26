@@ -9,10 +9,12 @@ interface
 uses
   Sanpai_Drawing, Sanpai_Timeline;
 
-// Pose は吊り金具の原点。BottomY は Pose を基準とする画面下端。
+// Pose は吊り金具の原点。BottomY はそのローカル座標での画面下端。
+// Progress は演出位置。Strength が 0 または演出範囲外なら静止する。
 procedure DrawBell(C: TSanpaiCanvas; const Pose: TPose; Progress,Strength: Double;
   BottomY: Single; Rear: Boolean; const Palette: TSanpaiPalette);
 
+// 背面で吊り金具を支える梁だけを描く。Pose は鈴と共通。
 procedure DrawBellCeiling(C: TSanpaiCanvas; const Pose: TPose; Color: Cardinal);
 
 implementation

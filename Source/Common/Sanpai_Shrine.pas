@@ -20,6 +20,7 @@ const
   ShrineBellScreenY = 128;
 
 // 同じ拝殿を正面から描き、View で画面に入る高さを選ぶ。
+// Pose は基準画面を描画面へ写す。Palette の木と土台の色を使う。
 procedure DrawShrine(C: TSanpaiCanvas; const Pose: TPose; View: TShrineView; const Palette: TSanpaiPalette);
 
 implementation

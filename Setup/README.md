@@ -1,35 +1,31 @@
-# SYNC_WeatherFX のZIP配布
+# SYNC_Sanpai の配布ZIP
 
-`make_release_zip.bat`を実行すると、ビルド済みの`SYNC_WeatherFX.auf2`を`SYNC_WeatherFX.zip`へ梱包し、`SYNC_WeatherFX.catalog.json`の末尾バージョンへ実物のXXH3-128を設定します。
+配布対象の Win64 Release 本体を用意し、使用するタグとカタログの末尾バージョンを合わせます。初回の公開バージョンは v1.0.0 です。公開日をカタログの release_date に設定します。
 
-## 作成前の準備
+ハッシュには [xxHash 公式 Windows 64ビット版 v0.8.4](https://github.com/Cyan4973/xxHash/releases/download/v0.8.4/xxhsum_win64_v0_8_4.zip) の xxhsum.exe を使用します。Win64\Dependencies\xxHash-0.8.4 に置くか、PATH に登録します。
 
-- Win64 Release構成の本体を用意します。標準の参照先は`C:\ProgramData\aviutl2\Plugin\SYNC_WeatherFX`です。
-- 初回の正式バージョンは**v1.0.0**です。本体の表示バージョンとJSONを合わせ、JSONの`release_date`を実際の公開日へ設定します。コピー元や内部検証版の履歴は引き継ぎません。
-- ハッシュ計算には[xxHash公式v0.8.4のWindows版](https://github.com/Cyan4973/xxHash/releases/download/v0.8.4/xxhsum_win64_v0_8_4.zip)の`xxhsum.exe`を使用します。`Win64\Dependencies\xxHash-0.8.4\xxhsum.exe`へ配置するか、PATHへ登録します。
+~~~bat
+Setup\make_release_zip.bat
+~~~
 
-```bat
-setup\make_release_zip.bat
-```
+通常は C:\ProgramData\aviutl2\Plugin\SYNC_Sanpai から本体を読み込みます。別の場所を指定する場合は次のように実行します。
 
-参照先を明示する場合:
+~~~bat
+Setup\make_release_zip.bat -ReleaseDirectory "D:\Release\SYNC_Sanpai" -XxhsumPath "D:\Tools\xxhsum.exe"
+~~~
 
-```bat
-setup\make_release_zip.bat -ReleaseDirectory "D:\Release\SYNC_WeatherFX" -XxhsumPath "D:\Tools\xxhsum.exe"
-```
+同じフォルダーに SYNC_Sanpai.zip を作成し、SYNC_Sanpai.catalog.json に梱包済みAUF2の XXH3-128 を記録します。
 
 ## ZIPの内容
 
-```text
-SYNC_WeatherFX/
-  SYNC_WeatherFX.auf2
+~~~text
+SYNC_Sanpai/
+  SYNC_Sanpai.auf2
   README.md
   LICENSE
   THIRD_PARTY_NOTICES.md
   ThirdParty/
     LICENSE.AviUtl2-SDK.txt
-```
+~~~
 
-同梱READMEはプロジェクトルートの`README.md`から生成します。画像・GIFのリンクはGitHubのソース公開先を参照します。本体と同じ5ファイルをJSONのアンインストール対象へ登録します。
-
-バッチはビルドやアプリの起動、GitHubへの公開を行いません。作成後はZIPの内容・本体のバージョン・JSONの公開日を確認し、GitHubリリースのタグを`v1.0.0`に合わせてZIPとJSONを公開します。
+同梱READMEはリポジトリのREADMEから生成し、画像は公開タグを参照します。GitHubのリリースには、ZIPとカタログJSONの両方を添付します。

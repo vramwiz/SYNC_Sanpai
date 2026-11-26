@@ -28,6 +28,7 @@ type
     Palette: TSanpaiPalette;
   end;
 
+  // Delay、Duration、Progress に渡す Time はオブジェクト内の秒数。
   TSanpaiTiming = record
     Delay, Duration: Double;
     // 開始前は -1。開始後は 0～1。時間0なら開始時刻で完了する。

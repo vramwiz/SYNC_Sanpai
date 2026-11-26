@@ -35,8 +35,9 @@ type
     function GradientColors(const Stops: array of TD2D1GradientStop): ID2D1GradientStopCollection;
     function Solid(Color: Cardinal; Alpha: Single): ID2D1Brush;
   public
-    // BeginDraw と EndDraw は呼出元が管理する。ポーズは現在の変換に合成する。
+    // 描画先とブラシは COM 参照として保持する。BeginDraw と EndDraw は呼出元が管理する。
     constructor Create(const Factory: ID2D1Factory; const Target: ID2D1RenderTarget);
+    // ローカル座標変換を現在の変換へ合成する。返した行列は Restore で復元する。
     function Push(const Pose: TPose): TD2DMatrix3x2F;
     function PushBasis(X, Y, XX, XY, YX, YY: Single): TD2DMatrix3x2F;
     procedure Restore(const Matrix: TD2DMatrix3x2F);

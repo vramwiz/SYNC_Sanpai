@@ -20,7 +20,7 @@ cmd /c 'call "C:\Program Files (x86)\Embarcadero\Studio\37.0\bin\rsvars.bat" && 
 - 最後に Release をビルドして配置する。両構成の警告・エラー数と AUF2 の更新を確認する。
 - 本番 AUF2 を読み込む検査は Tests\run_tests.ps1 で実行する。構成別コピーを検査する場合は -PluginPath、画像出力先を指定する場合は -ImageDirectory、鈴の動画プレビューも出力する場合は -MotionPreview を指定する。
 - 検査は 1280 × 720 の PNG、鈴の周期と順不同の描画、上下の構図で重なる背景、解像度の切り替えを確認し、1920 × 1080 の描画時間を計測する。通常の確認はコマンドラインで行う。IDE と AviUtl2 の画面操作はユーザーから依頼を受けて行う。
-- Setup は ZIP を含めて SYNC_WeatherFX のフォルダーをそのままコピーした。内部の ZIP 作成スクリプトとカタログは WeatherFX 用。
+- Setup は SYNC_Sanpai の配布ZIP作成スクリプトとカタログを持つ。初版の配布手順は Setup/README.md に記載する。
 
 ## ソースの配置
 
@@ -108,3 +108,11 @@ cmd /c 'call "C:\Program Files (x86)\Embarcadero\Studio\37.0\bin\rsvars.bat" && 
 - 専用項目の非表示条件は連続したシーン番号の範囲で登録する。結果演出は結果にだけ、おみくじの座標・拡大率は筒と結果の両方に表示する。
 - 出力は Win64\Verification\FortuneEffects。ログは Win64\BuildLogs の FortuneEffectsDebug と FortuneEffectsRelease、登場の確認GIFは Release\Results\fortune-entrance.gif。
 - Debug・Releaseとも警告0・エラー0。筒と紙の移動・拡縮、各結果演出と「なし」、表示方法との組み合わせ、0秒での完了、シークを検査した。両構成のPNG/WAV 35出力が一致し、旧設定の30出力も前版と一致した。Releaseを標準パスに配置し、前版を SYNC_Sanpai.pre-fortune-effects-53563af7.bak に退避した。AviUtl2の実画面は未確認。
+
+## v1.0.0 配布用の整理
+
+- 公開処理の引数、座標系、キャッシュの更新条件、ホスト所有データの寿命をコメントで補足した。描画と音声の処理は維持し、本番ソースで最長のユニットは484行。
+- README は導入と操作の説明にまとめ、確認済みの描画から6シーンの一覧を Sample/scenes.png に作成した。
+- Delphi 37.0 Win64 Debug / Release は警告0・エラー0。本番AUF2での検査を通過し、両構成のPNG/WAV 35出力が前版と一致した。ログは Win64\BuildLogs の DistributionDebug と DistributionRelease。
+- Setup の作成スクリプトを Sanpai 用に変更した。配布ZIPには Release 本体、README、ライセンス類を収録する。同梱READMEの画像は v1.0.0 タグを参照する。
+- ZIP内のAUF2の SHA-256 は DF06CDFA802BF0C642048C2DF3E276A572A647B12D14F88291DC79B382AA5904。カタログの XXH3-128 は 2ddbbc8a79fbcc88f91385d8229619b6 で、展開したAUF2と一致した。

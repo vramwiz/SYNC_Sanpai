@@ -9,7 +9,8 @@ interface
 uses
   Sanpai_Timeline;
 
-// Samples は呼出元のバッファ。オブジェクト内の絶対サンプル位置で再現する。
+// Samples は呼出元が用意したモノラルの上書き先。長さは呼出元が決める。
+// FirstSample はオブジェクト開始からのサンプル番号。Rate は Hz。
 procedure RenderSanpaiAudio(const Settings: TSanpaiSettings; FirstSample: Int64;
   Rate: Integer; var Samples: TArray<Single>);
 

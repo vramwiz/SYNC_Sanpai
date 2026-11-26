@@ -9,7 +9,8 @@ interface
 uses
   Sanpai_Drawing;
 
-// Pose は賽銭箱と同じ基準。Progress は TSanpaiTiming.Progress の結果。
+// Pose は賽銭箱と同じ基準。LandingX/Y は格子中央からの画面上の相対位置。
+// Progress は演出位置。箱の中へ入った硬貨・紙幣はクリップする。
 procedure DrawOfferings(C: TSanpaiCanvas; const Pose: TPose;
   Progress: Double; Coins,Bills: Integer; Rear: Boolean; LandingX,LandingY: Single);
 
