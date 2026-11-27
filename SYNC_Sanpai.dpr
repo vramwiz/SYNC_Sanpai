@@ -20,7 +20,6 @@ uses
   Sanpai_Timeline in 'Source\Common\Sanpai_Timeline.pas',
   Sanpai_Offerings in 'Source\Common\Sanpai_Offerings.pas',
   Sanpai_Tube in 'Source\Common\Sanpai_Tube.pas',
-  Sanpai_Audio in 'Source\Common\Sanpai_Audio.pas',
   Sanpai_Renderer in 'Source\Common\Sanpai_Renderer.pas',
   SYNC_Sanpai_FilterPlugin in 'Source\Plugin\Filter\SYNC_Sanpai_FilterPlugin.pas';
 

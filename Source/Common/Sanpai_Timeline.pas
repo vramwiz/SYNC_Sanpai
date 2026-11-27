@@ -2,7 +2,7 @@
 
 // Copyright (c) 2026 VRAMの魔術師
 // SPDX-License-Identifier: GPL-3.0-only
-// 映像と音声が、オブジェクトの絶対時刻から同じ演出位置を求める。
+// オブジェクト内の時刻に基づいて演出の進行を求める。
 
 interface
 
@@ -38,8 +38,6 @@ type
   TSanpaiSettings = record
     Visual: TSanpaiVisual;
     Timing: TSanpaiTiming;
-    Sound: Boolean;
-    Volume: Single;
   end;
 
   TOfferingCue = record
@@ -47,11 +45,10 @@ type
   end;
 
 function IsRear(Scene: TSanpaiScene): Boolean;
-// 同じ枚数・番号から、映像と効果音に共通の投入時刻を得る。
+// 枚数と番号から、投入のタイミングと軌道を求める。
 function OfferingCue(Index, Total: Integer; Paper: Boolean): TOfferingCue;
 function Ease(Value: Double): Double;
 function ShakeEnvelope(Progress: Double): Double;
-function BellImpact(Index: Integer): Double;
 
 const
   DefaultFortuneEffect = feFloat;
@@ -66,9 +63,6 @@ const
   DefaultPalette: TSanpaiPalette = (Wood:WoodBase; Foundation:FoundationBase;
     Box:BoxBase; Bell:BellBase; Rope:RopeBase; Tube:TubeBase; Text:TextBase; Paper:WashiBase);
 
-  BellImpactCount = 6;
-  TubeRattle: array[0..9] of Double =
-    (0.07,0.11,0.17,0.24,0.29,0.34,0.41,0.49,0.54,0.60);
   TubeStickStart = 0.72;
 
 implementation
@@ -98,11 +92,6 @@ function ShakeEnvelope(Progress: Double): Double;
 begin
   if (Progress<=0) or (Progress>=1) then Exit(0);
   Result := Sqr(Sin(Pi*Progress));
-end;
-
-function BellImpact(Index: Integer): Double;
-begin
-  Result := (Index+0.5)/BellImpactCount;
 end;
 
 function OfferingCue(Index, Total: Integer; Paper: Boolean): TOfferingCue;

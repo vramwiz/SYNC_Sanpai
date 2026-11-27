@@ -100,7 +100,6 @@
         <DCCReference Include="Source\Common\Sanpai_Timeline.pas"/>
         <DCCReference Include="Source\Common\Sanpai_Offerings.pas"/>
         <DCCReference Include="Source\Common\Sanpai_Tube.pas"/>
-        <DCCReference Include="Source\Common\Sanpai_Audio.pas"/>
         <DCCReference Include="Source\Common\Sanpai_Renderer.pas"/>
         <DCCReference Include="Source\Plugin\Filter\SYNC_Sanpai_FilterPlugin.pas"/>
         <BuildConfiguration Include="Base">

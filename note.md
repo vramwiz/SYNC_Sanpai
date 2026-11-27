@@ -116,3 +116,10 @@ cmd /c 'call "C:\Program Files (x86)\Embarcadero\Studio\37.0\bin\rsvars.bat" && 
 - Delphi 37.0 Win64 Debug / Release は警告0・エラー0。本番AUF2での検査を通過し、両構成のPNG/WAV 35出力が前版と一致した。ログは Win64\BuildLogs の DistributionDebug と DistributionRelease。
 - Setup の作成スクリプトを Sanpai 用に変更した。配布ZIPには Release 本体、README、ライセンス類を収録する。同梱READMEの画像は v1.0.0 タグを参照する。
 - ZIP内のAUF2の SHA-256 は DF06CDFA802BF0C642048C2DF3E276A572A647B12D14F88291DC79B382AA5904。カタログの XXH3-128 は 2ddbbc8a79fbcc88f91385d8229619b6 で、展開したAUF2と一致した。
+
+## 音声生成の削除と v1.0.0 の更新
+
+- 映像専用のメディアオブジェクトとして登録する。合成音、音声コールバック、「効果音関連」「効果音」「音量」を削除した。「鈴を鳴らす強さ」は揺れ幅を調整する保存項目として使う。
+- Delphi 37.0 の Win64 Debug・Release は警告0・エラー0。本番AUF2で映像専用の登録と6シーンの描画を検査した。ビルド・検査ログは Win64\BuildLogs の SilentReleaseDebug と SilentReleaseRelease、結果は Win64\Verification\SilentRelease に保存した。
+- 公開済み v1.0.0 と比較し、両構成で PNG 32枚とプレビュー5本分の描画直後のRGBA 215フレームが一致した。AviUtl2 の実画面は未確認。
+- 検証済みReleaseを標準パスに配置した。Setup の配布ZIPとカタログを更新した。ZIP内のAUF2の SHA-256 は 9AFCE13AAEB0C90AFC1FCF3CBEDDBC3B5B146AE3F16215E0C3A908552CA3ED19、カタログの XXH3-128 は f17be42a95905d6cab97e089f11c3af2。

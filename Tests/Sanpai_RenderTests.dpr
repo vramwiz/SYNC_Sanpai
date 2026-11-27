@@ -2,7 +2,7 @@
 
 // Copyright (c) 2026 VRAMの魔術師
 // SPDX-License-Identifier: GPL-3.0-only
-// 本番 AUF2 の登録テーブル、映像・音声コールバックとシークを検査する。
+// 本番 AUF2 の登録テーブル、映像コールバックとシークを検査する。
 
 {$APPTYPE CONSOLE}
 {$R+}{$Q+}
@@ -25,12 +25,10 @@ type
   PItem = ^TItem;
   TItem = record ItemType,Name: PWideChar end;
   TPixels = TArray<TPIXEL_RGBA>;
-  TSamples = TArray<Single>;
 
 const
   W = 1280;
   H = 720;
-  Hz = 48000;
   SceneNames: array[0..5] of string =
     ('賽銭箱（正面）','賽銭箱（背面）','鈴（正面）','鈴（背面）','おみくじをひく','おみくじの結果');
   BoxFront = 0;
@@ -46,11 +44,9 @@ const
 var
   Table: PFILTER_PLUGIN_TABLE;
   Video: TFILTER_PROC_VIDEO;
-  Audio: TFILTER_PROC_AUDIO;
   Obj: TOBJECT_INFO;
   Scene: TSCENE_INFO;
   Captured: TPixels;
-  Channels: array[0..1] of TSamples;
   SetCount,ActualWidth,ActualHeight: Integer;
   OutputDir: string;
 
@@ -98,12 +94,6 @@ begin
   Move(Buffer^,Captured[0],Length(Captured)*SizeOf(TPIXEL_RGBA));
 end;
 
-procedure SetSample(Buffer: System.PSingle; Channel: Integer); cdecl;
-begin
-  SetLength(Channels[Channel],Obj.SampleNum);
-  Move(Buffer^,Channels[Channel][0],Obj.SampleNum*SizeOf(Single));
-end;
-
 function Frame(Time: Double): TPixels;
 var
   Before: Integer;
@@ -114,16 +104,6 @@ begin
   Check(SetCount=Before+1,'Expected one image submission');
   Check((ActualWidth=Scene.Width) and (ActualHeight=Scene.Height),'Image dimension mismatch');
   Result := Copy(Captured);
-end;
-
-function Samples(First: Int64; Count: Integer): TSamples;
-begin
-  Obj.SampleIndex := First;
-  Obj.SampleNum := Count;
-  Check(Table^.Func_Proc_Audio(@Audio)=1,'Audio callback failed');
-  Check((Length(Channels[0])=Count) and (Length(Channels[1])=Count) and
-    CompareMem(@Channels[0][0],@Channels[1][0],Count*SizeOf(Single)),'Incomplete stereo output');
-  Result := Copy(Channels[0]);
 end;
 
 function Same(const A,B: TPixels): Boolean;
@@ -261,12 +241,14 @@ var
   Options: POptions;
   I,J,RuleCount,GroupIndex: Integer;
   Rule: PHideRule;
+  ItemName: string;
 begin
   Check((string(Table^.Name)='参拝演出') and (string(Table^.Label_)='SYNC') and
-    (Table^.Flag=(FILTER_FLAG_VIDEO or FILTER_FLAG_AUDIO or FILTER_FLAG_INPUT or FILTER_FLAG_USERDATA)),
+    (Table^.Flag=(FILTER_FLAG_VIDEO or FILTER_FLAG_INPUT or FILTER_FLAG_USERDATA)),
     'Unexpected filter registration');
-  Check(Assigned(Table^.Func_Proc_Video) and Assigned(Table^.Func_Proc_Audio) and
+  Check(Assigned(Table^.Func_Proc_Video) and
     Assigned(Table^.Func_Create) and Assigned(Table^.Func_Destroy),'Missing callbacks');
+  Check(not Assigned(Table^.Func_Proc_Audio),'A video-only plugin registered an audio callback');
   Items := Pointer(Table^.Items);
   Check(Items^[0]=Item('シーン','select'),'First item is not scene selection');
   Check(Items^[1]=Track('演出開始までの時間'),'Second item is not delay');
@@ -294,6 +276,9 @@ begin
   for I := 3 to High(TItems) do
   begin
     if Items^[I]=nil then Break;
+    ItemName := string(PItem(Items^[I])^.Name);
+    Check((ItemName<>'効果音関連') and (ItemName<>'効果音') and (ItemName<>'音量'),
+      'An audio control or visibility rule is registered');
     if Items^[I]=Item('色設定','group') then GroupIndex := I;
     if string(PItem(Items^[I])^.ItemType)<>'hiderule' then Continue;
     Rule := Items^[I];
@@ -304,7 +289,7 @@ begin
       Check(string(Rule^.Name)<>ColorNames[J],'A common color setting was hidden');
     Inc(RuleCount);
   end;
-  Check(RuleCount=31,'Incomplete per-scene visibility rules');
+  Check(RuleCount=28,'Incomplete per-scene visibility rules');
   Check((Track('おみくじX')^.Value=0) and (Track('おみくじY')^.Value=0) and
     (Track('おみくじ拡大率')^.Value=100),'Wrong fortune position defaults');
   Check(PFILTER_ITEM_SELECT(Item('結果演出','select'))^.Value=1,'Entrance effect is not the default');
@@ -321,8 +306,8 @@ begin
     'The initial offering target is not centered');
   Check((Track('硬貨枚数')^.E=30) and (Track('硬貨枚数')^.Value=1) and
     (Track('紙幣枚数')^.E=10) and (Track('紙幣枚数')^.Value=0) and
-    (Track('鈴を鳴らす強さ')^.Value=50) and (Track('筒を振る強さ')^.Value=50) and
-    (Track('音量')^.Value=50) and SameValue(Track('音量')^.Step,0.01),'Wrong parameter defaults');
+    (Track('鈴を鳴らす強さ')^.Value=50) and (Track('筒を振る強さ')^.Value=50),'Wrong parameter defaults');
+  WriteLn('Video-only registration, scene settings and parameter defaults passed.');
 end;
 
 procedure CheckVideo;
@@ -677,117 +662,6 @@ begin
   WriteLn('Both fortune placements, three entrances, no entrance, compositing and final state passed.');
 end;
 
-function Peak(const Wave: TSamples): Double;
-var
-  X: Single;
-begin
-  Result := 0;
-  for X in Wave do
-  begin
-    Check(not IsNaN(X) and not IsInfinite(X) and (Abs(X)<=1),'Invalid PCM sample');
-    Result := Max(Result,Abs(X));
-  end;
-end;
-
-procedure SaveWAV(const Wave: TSamples; const Name: string);
-var
-  Stream: TFileStream;
-  X: Single;
-  S: SmallInt;
-  DataSize: Cardinal;
-  N: Word;
-  Header: AnsiString;
-
-  procedure WriteText(const Value: AnsiString);
-  begin
-    Stream.WriteBuffer(Value[1],Length(Value));
-  end;
-
-  procedure WriteDWord(Value: Cardinal);
-  begin
-    Stream.WriteBuffer(Value,SizeOf(Value));
-  end;
-
-begin
-  Stream := TFileStream.Create(OutputDir+Name+'.wav',fmCreate);
-  try
-    DataSize := Length(Wave)*SizeOf(SmallInt);
-    Header := 'RIFF';
-    WriteText(Header);
-    WriteDWord(36+DataSize);
-    WriteText('WAVEfmt ');
-    WriteDWord(16);
-    N := 1;
-    Stream.WriteBuffer(N,SizeOf(N));
-    Stream.WriteBuffer(N,SizeOf(N));
-    WriteDWord(Hz);
-    WriteDWord(Hz*2);
-    N := 2;
-    Stream.WriteBuffer(N,SizeOf(N));
-    N := 16;
-    Stream.WriteBuffer(N,SizeOf(N));
-    WriteText('data');
-    WriteDWord(DataSize);
-    for X in Wave do
-    begin
-      S := Round(X*32767);
-      Stream.WriteBuffer(S,SizeOf(S));
-    end;
-  finally
-    Stream.Free;
-  end;
-end;
-
-procedure CheckAudio;
-const
-  IDs: array[0..2] of Integer = (BoxFront,BellFront,FortuneDraw);
-  AudioFiles: array[0..2] of string = ('offering-audio','bell-audio','tube-audio');
-var
-  Full,Part: TSamples;
-  I: Integer;
-  NativePeak,HalfPeak: Double;
-begin
-  Scene.SampleRate := Hz;
-  Obj.ChannelNum := 2;
-  Track('硬貨枚数')^.Value := 5;
-  Track('紙幣枚数')^.Value := 2;
-  for I := 0 to High(IDs) do
-  begin
-    SelectValue('シーン',IDs[I]);
-    Track('音量')^.Value := 100;
-    Check(Peak(Samples(0,Hz))=0,'Audio started before the animation');
-    Check(Peak(Samples(2*Hz,Hz div 3))=0,'Audio extended beyond the animation');
-    Full := Samples(Hz,Hz);
-    NativePeak := Peak(Full);
-    Check(NativePeak>0.01,'Sound event was silent');
-    Part := Samples(Hz+9137,31189);
-    Check(CompareMem(@Full[9137],@Part[0],Length(Part)*SizeOf(Single)),'Audio depends on block boundaries');
-    Track('音量')^.Value := 50;
-    HalfPeak := Peak(Samples(Hz,Hz));
-    Check(Abs(HalfPeak-NativePeak/2)<0.00001,'Volume scaling is wrong');
-    Toggle('効果音',False);
-    Check(Peak(Samples(Hz,Hz))=0,'Muted plugin output sound');
-    Toggle('効果音',True);
-    Track('演出の時間')^.Value := 0;
-    Check(Peak(Samples(Hz,Hz))=0,'Zero-duration audio output sound');
-    Track('演出の時間')^.Value := 1;
-    SaveWAV(Full,AudioFiles[I]);
-  end;
-  SelectValue('シーン',BoxFront);
-  Track('硬貨枚数')^.Value := 1;
-  Check((Peak(Samples(Hz,Hz div 4))=0) and (Peak(Samples(Hz+Hz div 4,Hz div 2))>0.01),
-    'Coin audio was not synchronized to contact');
-  Track('硬貨枚数')^.Value := 0;
-  Check(Peak(Samples(Hz,Hz))=0,'Bills produced coin audio');
-  SelectValue('シーン',BellRear);
-  Track('鈴を鳴らす強さ')^.Value := 0;
-  Check(Peak(Samples(Hz,Hz))=0,'A stationary bell produced sound');
-  Track('鈴を鳴らす強さ')^.Value := 50;
-  SelectValue('シーン',FortuneResult);
-  Check(Peak(Samples(Hz,Hz))=0,'Fortune paper produced sound');
-  WriteLn('Three generated sounds, contact timing, volume, silence and sample-exact seeking passed.');
-end;
-
 procedure Benchmark;
 const
   Frames = 36;
@@ -849,14 +723,10 @@ begin
       Video.SetImageData := SetImage;
       Video.UserData := Table^.Func_Create(1);
       Check(Video.UserData<>nil,'Session creation failed');
-      Audio.Scene := @Scene;
-      Audio.Object_ := @Obj;
-      Audio.SetSampleData := SetSample;
       try
         CheckVideo;
         CheckPlacementAndPalette;
         CheckFortuneEffects;
-        CheckAudio;
         Benchmark;
         if ParamCount=3 then
         begin

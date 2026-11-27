@@ -3,7 +3,7 @@
         "id":  "VRAMWIZ.SYNC_Sanpai",
         "name":  "参拝演出",
         "type":  "フィルタプラグイン",
-        "summary":  "賽銭箱・鈴・おみくじを6つのシーンで描画し、効果音を生成",
+        "summary":  "賽銭箱・鈴・おみくじを6つの無音シーンで描画",
         "description":  "https://raw.githubusercontent.com/vramwiz/SYNC_Sanpai/refs/heads/main/README.md",
         "author":  "VRAMの魔術師",
         "repoURL":  "https://github.com/vramwiz/SYNC_Sanpai/",
@@ -87,7 +87,7 @@
                             "file":  [
                                          {
                                              "path":  "{pluginsDir}/SYNC_Sanpai/SYNC_Sanpai.auf2",
-                                             "XXH3_128":  "2ddbbc8a79fbcc88f91385d8229619b6"
+                                             "XXH3_128":  "f17be42a95905d6cab97e089f11c3af2"
                                          }
                                      ]
                         }

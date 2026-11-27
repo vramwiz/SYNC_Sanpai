@@ -2,7 +2,7 @@
 
 // Copyright (c) 2026 VRAMの魔術師
 // SPDX-License-Identifier: GPL-3.0-only
-// AviUtl2 のメディア入力として、シーン設定と映像・音声のコールバックを登録する。
+// AviUtl2 のメディア入力として、シーン設定と映像コールバックを登録する。
 
 interface
 
@@ -19,11 +19,10 @@ implementation
 
 uses
   System.Math, System.SysUtils, System.SyncObjs, Winapi.Windows, PluginFilterTable,
-  Sanpai_Timeline, Sanpai_Renderer, Sanpai_Fortunes, Sanpai_Audio;
+  Sanpai_Timeline, Sanpai_Renderer, Sanpai_Fortunes;
 
 const
   SceneName = 'シーン';
-  HideEqual = 0;
   HideNotEqual = 1;
   HideGreater = 2;
   HideLess = 3;
@@ -60,12 +59,12 @@ var
   SceneItem, FortuneItem, RevealItem, FortuneEffectItem: TFILTER_ITEM_SELECT;
   DelayItem, DurationItem, CoinsItem, BillsItem, OfferingXItem,OfferingYItem,
     BellXItem,BellYItem, BoxXItem,BoxYItem,
-    BellStrengthItem, TubeStrengthItem, FortuneXItem,FortuneYItem,FortuneScaleItem,VolumeItem: TFILTER_ITEM_TRACK;
-  ShowBellItem, ShowBoxItem, SoundItem: TFILTER_ITEM_CHECK;
+    BellStrengthItem, TubeStrengthItem, FortuneXItem,FortuneYItem,FortuneScaleItem: TFILTER_ITEM_TRACK;
+  ShowBellItem, ShowBoxItem: TFILTER_ITEM_CHECK;
   WoodColorItem,FoundationColorItem,BoxColorItem,BellColorItem,RopeColorItem,TubeColorItem,
     PaperItem,TextItem: TFILTER_ITEM_COLOR;
-  BoxGroup,BellGroup,TubeGroup,FortuneGroup,FortuneSharedGroup,SoundGroup,ColorGroup: TFILTER_ITEM_GROUP;
-  GroupRules: array[0..30] of TFILTER_ITEM_HIDE_RULE;
+  BoxGroup,BellGroup,TubeGroup,FortuneGroup,FortuneSharedGroup,ColorGroup: TFILTER_ITEM_GROUP;
+  GroupRules: array[0..27] of TFILTER_ITEM_HIDE_RULE;
   RuleCount: Integer;
 
 type
@@ -102,8 +101,6 @@ begin
     Result.Visual.Scene := TSanpaiScene(Scene);
   Result.Timing.Delay := Number(DelayItem,1);
   Result.Timing.Duration := Number(DurationItem,1);
-  Result.Sound := SoundItem.Value<>0;
-  Result.Volume := Number(VolumeItem,50);
   Result.Visual.Palette.Wood := RGBValue(WoodColorItem);
   Result.Visual.Palette.Foundation := RGBValue(FoundationColorItem);
   Result.Visual.Palette.Box := RGBValue(BoxColorItem);
@@ -153,7 +150,6 @@ begin
         Result.Visual.FortuneEffect := DefaultFortuneEffect;
         if (Effect>=Ord(Low(TFortuneEffect))) and (Effect<=Ord(High(TFortuneEffect))) then
           Result.Visual.FortuneEffect := TFortuneEffect(Effect);
-        Result.Sound := False;
       end;
   end;
 end;
@@ -200,33 +196,6 @@ begin
     Result := TSanpaiSession(Video^.UserData).Render(Video,SnapshotSettings);
   except
     on E: Exception do OutputDebugString(PWideChar('SYNC_Sanpai render: '+E.Message));
-  end;
-end;
-
-// 音声は画像側の状態やロックに依存しない。同じ信号を各チャンネルへ渡す。
-function SanpaiProcAudio(Audio: PFILTER_PROC_AUDIO): Byte; cdecl;
-var
-  Samples: TArray<Single>;
-  Count,Rate,Channels,C: Integer;
-  First: Int64;
-begin
-  Result := 0;
-  if (Audio=nil) or (Audio^.Scene=nil) or (Audio^.Object_=nil) or
-    not Assigned(Audio^.SetSampleData) then Exit;
-  try
-    Count := Audio^.Object_^.SampleNum;
-    Channels := Audio^.Object_^.ChannelNum;
-    Rate := Audio^.Scene^.SampleRate;
-    First := Audio^.Object_^.SampleIndex;
-    if (Count<0) or (Count>1048576) or (Channels<1) or (Channels>32) or
-      (Rate<8000) or (Rate>384000) or (First>High(Int64)-Count) then Exit;
-    if Count=0 then Exit(1);
-    SetLength(Samples,Count);
-    RenderSanpaiAudio(SnapshotSettings,First,Rate,Samples);
-    for C := 0 to Channels-1 do Audio^.SetSampleData(@Samples[0],C);
-    Result := 1;
-  except
-    on E: Exception do OutputDebugString(PWideChar('SYNC_Sanpai audio: '+E.Message));
   end;
 end;
 
@@ -310,10 +279,6 @@ begin
   AddSelect(RevealItem,'表示方法',Ord(frShow),@RevealOptions[0]);
   AddSelect(FortuneEffectItem,'結果演出',Ord(DefaultFortuneEffect),@EffectOptions[0]);
 
-  AddGroup(SoundGroup,'効果音関連',0);
-  AddCheck(SoundItem,'効果音',1);
-  AddTrack(VolumeItem,'音量',50,0,100,0.01);
-
   AddGroup(ColorGroup,'色設定',0);
   AddPaletteColor(WoodColorItem,'木の色',DefaultPalette.Wood);
   AddPaletteColor(FoundationColorItem,'土台の色',DefaultPalette.Foundation);
@@ -334,15 +299,14 @@ begin
   HideOutside([TubeGroup.Name,TubeStrengthItem.Name],ssTube,ssTube);
   HideOutside([FortuneGroup.Name,FortuneItem.Name,RevealItem.Name,FortuneEffectItem.Name],
     ssFortunes,ssFortunes);
-  HideWhen([SoundGroup.Name,SoundItem.Name,VolumeItem.Name],HideEqual,ssFortunes);
 end;
 
 function GetSanpaiFilterTable: PFILTER_PLUGIN_TABLE;
 begin
   if not PluginTableInitialized then
   begin
-    SetupPluginTable(FILTER_FLAG_VIDEO or FILTER_FLAG_AUDIO or FILTER_FLAG_INPUT or FILTER_FLAG_USERDATA,
-      '参拝演出','SYNC','参拝演出 / SYNC_Sanpai v1.0.0',SanpaiProcVideo,SanpaiProcAudio);
+    SetupPluginTable(FILTER_FLAG_VIDEO or FILTER_FLAG_INPUT or FILTER_FLAG_USERDATA,
+      '参拝演出','SYNC','参拝演出 / SYNC_Sanpai v1.0.0',SanpaiProcVideo,nil);
     RegisterParameters;
     GetPluginTable^.Func_Create := SanpaiCreate;
     GetPluginTable^.Func_Destroy := SanpaiDestroy;
